@@ -1,0 +1,105 @@
+{% load static %}
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>New Purchase Order</title>
+    <link rel="stylesheet" href="{% static 'products/po.css' %}">
+    <style>.hidden-delete{display:none}</style>
+  </head>
+  <body>
+    <h1>New Purchase Order</h1>
+
+    <form method="post" id="po-form">
+      {% csrf_token %}
+
+      <fieldset class="box">
+        <legend>Supplier & Business</legend>
+        <div class="grid">
+          <div>{{ form.supplier_name.label_tag }} {{ form.supplier_name }}</div>
+          <div>{{ form.business_name.label_tag }} {{ form.business_name }}</div>
+          <div>{{ form.supplier_address.label_tag }} {{ form.supplier_address }}</div>
+          <div>{{ form.business_address.label_tag }} {{ form.business_address }}</div>
+          <div>{{ form.date.label_tag }} {{ form.date }}</div>
+          <div>{{ form.tax_percent.label_tag }} {{ form.tax_percent }}</div>
+          <div>{{ form.payment_terms.label_tag }} {{ form.payment_terms }}</div>
+        </div>
+      </fieldset>
+
+      <fieldset class="box">
+        <legend>Items</legend>
+        {{ formset.management_form }}
+        <table class="items">
+          <thead>
+            <tr>
+              <th style="width:45%">Product</th>
+              <th style="width:15%">Qty</th>
+              <th style="width:20%">Unit Price</th>
+              <th style="width:10%">Remove</th>
+            </tr>
+          </thead>
+          <tbody id="itemsBody">
+            {% for f in formset %}
+              <tr class="item-row">
+                <td>{{ f.product }}</td>
+                <td>{{ f.quantity_received }}</td>
+                <td>{{ f.unit_price }}</td>
+                <td class="center">
+                  <span class="hidden-delete">{{ f.DELETE }}</span>
+                  <button type="button" class="remove-btn">Remove</button>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <!-- 🔧 Hidden template based on empty_form – used when adding rows -->
+        <template id="empty-form-template">
+          <tr class="item-row">
+            <td>{{ formset.empty_form.product }}</td>
+            <td>{{ formset.empty_form.quantity_received }}</td>
+            <td>{{ formset.empty_form.unit_price }}</td>
+            <td class="center">
+              <span class="hidden-delete">{{ formset.empty_form.DELETE }}</span>
+              <button type="button" class="remove-btn">Remove</button>
+            </td>
+          </tr>
+        </template>
+
+        <button type="button" class="ghost-btn" id="addRow">+ Add item</button>
+      </fieldset>
+
+      <div class="actions">
+        <button type="submit" class="primary-btn">Save Draft</button>
+        <a href="{% url 'product_list' %}" class="link">Cancel</a>
+      </div>
+    </form>
+
+    <script>
+      const addRowBtn = document.getElementById("addRow");
+      const tbody = document.getElementById("itemsBody");
+      const totalFormsInput = document.querySelector('input[name$="TOTAL_FORMS"]');
+      const templateHtml = document.getElementById("empty-form-template").innerHTML;
+
+      // ➕ Add new row from the empty_form template (works even when 0 rows exist)
+      addRowBtn.addEventListener("click", () => {
+        const index = parseInt(totalFormsInput.value, 10);
+        const rowHtml = templateHtml.replace(/__prefix__/g, index); // key magic
+        tbody.insertAdjacentHTML("beforeend", rowHtml);
+        totalFormsInput.value = index + 1;
+      });
+
+      // ❌ Remove row: check hidden DELETE & hide the row
+      tbody.addEventListener("click", (e) => {
+        const btn = e.target.closest(".remove-btn");
+        if (!btn) return;
+        const row = btn.closest(".item-row");
+        const del = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+        if (del) {
+          del.checked = true;        // mark for deletion
+          row.style.display = "none";
+        }
+      });
+    </script>
+  </body>
+</html>

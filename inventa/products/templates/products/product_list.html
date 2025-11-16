@@ -1,0 +1,102 @@
+{% load static %}
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>All Products</title>
+    <link rel="stylesheet" href="{% static 'products/product_list.css' %}">
+  </head>
+  <body>
+    <h1>Products</h1>
+
+    <div class="actions">
+      <a href="{% url 'add_product' %}"><button class="add-btn">+ Add Product</button></a>
+      <a href="{% url 'po_create' %}"><button class="in-btn">📦 In Products</button></a>
+    </div>
+
+
+
+    {% if products %}
+      <table>
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Name</th>
+            <th>Quantity</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in products %}
+          <tr>
+            <td>{{ p.sku }}</td>
+            <td>{{ p.name }}</td>
+            <td>{{ p.quantity }}</td>
+            <td>
+              <!-- Trigger the modal; data-* feeds the modal -->
+              <button
+                class="delete-btn"
+                data-delete-url="{% url 'delete_product' p.pk %}"
+                data-sku="{{ p.sku }}"
+                data-name="{{ p.name }}"
+              >
+                Delete
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No products yet. Add some in the <a href="{% url 'add_product' %}">Add Product</a> page.</p>
+    {% endif %}
+
+    <!-- 🪄 Reusable Delete Modal -->
+    <div class="modal-overlay" id="deleteModal" style="display:none;">
+      <div class="modal">
+        <h3>Confirm Delete</h3>
+        <p id="deleteText">Are you sure you want to delete this product?</p>
+
+        <form id="deleteForm" method="post" action="">
+          {% csrf_token %}
+          <div class="modal-actions">
+            <button type="submit" class="confirm-btn">Yes, delete</button>
+            <button type="button" class="cancel-btn" id="cancelDelete">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // Grab elements
+      const modal = document.getElementById("deleteModal");
+      const deleteText = document.getElementById("deleteText");
+      const deleteForm = document.getElementById("deleteForm");
+      const cancelBtn = document.getElementById("cancelDelete");
+
+      // Open modal with populated info
+      document.addEventListener("click", function (e) {
+        const btn = e.target.closest(".delete-btn");
+        if (!btn) return;
+
+        const url = btn.getAttribute("data-delete-url");
+        const sku = btn.getAttribute("data-sku");
+        const name = btn.getAttribute("data-name");
+
+        deleteText.textContent = `Delete ${name} (SKU: ${sku})? This action cannot be undone.`;
+        deleteForm.setAttribute("action", url);
+        modal.style.display = "flex";
+      });
+
+      // Close modal
+      cancelBtn.addEventListener("click", function () {
+        modal.style.display = "none";
+      });
+
+      // Click outside modal to close (optional)
+      modal.addEventListener("click", function (e) {
+        if (e.target === modal) modal.style.display = "none";
+      });
+    </script>
+  </body>
+</html>

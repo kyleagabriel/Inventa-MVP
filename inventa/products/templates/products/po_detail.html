@@ -1,0 +1,62 @@
+{% load static %}
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>PO - {{ po.supplier_name }} [{{ po.date }}]</title>
+    <link rel="stylesheet" href="{% static 'products/po.css' %}">
+  </head>
+  <body>
+    <h1>Purchase Order - {{ po.supplier_name }} [{{ po.date }}]</h1>
+
+    <div class="box">
+      <h3>Supplier & Business</h3>
+      <div class="grid">
+        <div><strong>Supplier:</strong> {{ po.supplier_name }}</div>
+        <div><strong>Supplier Address:</strong> {{ po.supplier_address }}</div>
+        <div><strong>Company Name:</strong> {{ po.business_name }}</div>
+        <div><strong>Delivery Address:</strong> {{ po.business_address }}</div>
+        <div><strong>Payment Terms:</strong> {{ po.payment_terms }}</div>
+        <div><strong>Date:</strong> {{ po.date }}</div>
+        
+      </div>
+    </div>
+
+    <div class="box">
+      <h3>Items</h3>
+      <table class="items">
+        <thead>
+          <tr>
+            <th>SKU</th><th>Name</th><th class="right">Qty</th><th class="right">Unit Price</th><th class="right">Line Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for it in po.items.all %}
+          <tr>
+            <td>{{ it.product.sku }}</td>
+            <td>{{ it.product.name }}</td>
+            <td class="right">{{ it.quantity_received }}</td>
+            <td class="right">{{ it.unit_price }}</td>
+            <td class="right">{{ it.line_total }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr><th colspan="4" class="right">Subtotal</th><th class="right">{{ po.subtotal }}</th></tr>
+            <tr>
+                <th colspan="4" class="right">Tax ({{ po.tax_percent|floatformat:0 }}%)</th>
+                <th class="right">{{ po.tax_value }}</th>
+            </tr>
+          <tr><th colspan="4" class="right">Total</th><th class="right">{{ po.total_with_tax }}</th></tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <form method="post" action="{% url 'po_confirm' po.pk %}" class="actions">
+      {% csrf_token %}
+      <button type="submit" class="success-btn">Confirm & Increase Stock</button>
+      <a href="{% url 'po_create' %}" class="link">New PO</a>
+      <a href="{% url 'product_list' %}" class="link">Back to Inventory</a>
+    </form>
+  </body>
+</html>
